@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Stink War Legacy 2 — Prototype</title>
+<style>
+:root{--bg:#111827;--panel:#1f2937;--gold:#ffd166;--ink:#f8fafc;--muted:#cbd5e1}
+*{box-sizing:border-box} html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b1220;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;touch-action:none}
+#wrap{display:flex;flex-direction:column;width:100%;height:100%;max-width:1100px;margin:auto;background:#111827}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:#172033;border-bottom:1px solid #334155;min-height:52px}
+h1{font-size:clamp(14px,3.2vw,22px);margin:0;line-height:1.15} #stats{font-size:13px;color:var(--gold);white-space:nowrap}
+#game{display:block;width:100%;flex:1;min-height:0;background:#9ed7e5}
+#controls{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:9px;background:#172033}
+button{border:1px solid #475569;border-radius:12px;padding:10px 4px;background:#263449;color:white;font-weight:700;font-size:clamp(11px,2.8vw,15px);min-height:48px}
+button:active{transform:scale(.98);background:#38506e} button:disabled{opacity:.4}
+#message{padding:5px 10px;background:#0f172a;color:#cbd5e1;text-align:center;font-size:12px;min-height:25px}
+.overlay{position:fixed;inset:0;background:#07101de8;display:flex;align-items:center;justify-content:center;padding:18px;z-index:5}
+.card{width:min(500px,100%);padding:22px;border:1px solid #475569;border-radius:18px;background:#172033;text-align:center;box-shadow:0 20px 70px #0008}
+.card h2{margin:0 0 8px;font-size:25px}.card p{color:#cbd5e1;line-height:1.45}
+.card button{width:100%;margin-top:8px;background:#166534;border-color:#22c55e;font-size:16px}
+.small{font-size:12px;color:#94a3b8}
+@media(min-width:700px){#controls{grid-template-columns:repeat(4,minmax(110px,1fr));justify-content:center}button{max-width:none}}
+</style>
+</head>
+<body>
+<div id="wrap">
+<header><h1>⚔️ Stink War Legacy 2<br><span style="font-size:.65em;color:#94a3b8;font-weight:500">МОЙ ПРОТОТИП · Глава <span id="levelNum">1</span></span></h1><div id="stats">🪙 <span id="gold">180</span>　🏰 <span id="hp">100</span>%</div></header>
+<canvas id="game" aria-label="Игровое поле"></canvas>
+<div id="message">Добывай золото, создавай бойцов и защити свою статую!</div>
+<div id="controls">
+<button id="mine">⛏️ Рабочий<br><small>60 золота</small></button>
+<button id="sword">⚔️ Мечник<br><small>80 золота</small></button>
+<button id="archer">🏹 Лучник<br><small>100 золота</small></button>
+<button id="special">⚡ Удар<br><small>40 золота</small></button>
+</div>
+</div>
+<div class="overlay" id="menu"><div class="card"><h2>Stink War Legacy 2</h2><p>Черновой прототип стратегии: добывай золото, нанимай бойцов и разрушь вражескую башню. В этой версии — оригинальные простые рисунки и три тестовые главы.</p><button id="start">Начать главу 1</button><p class="small">Создано как стартовый проект для доработки и публикации. Это не готовая копия оригинальной игры.</p></div></div>
+<div class="overlay" id="end" style="display:none"><div class="card"><h2 id="endTitle">Глава завершена!</h2><p id="endText"></p><button id="next">Следующая глава</button><button id="again" style="background:#334155;border-color:#64748b">Переиграть главу</button></div></div>
+<script>
+(() => {
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const $=id=>document.getElementById(id);
+let W=800,H=420,dpr=1,started=false,ended=false,level=1,gold=180,baseHP=100,enemyHP=100,units=[],enemies=[],arrows=[],particles=[],tick=0,spawnTimer=0,enemySpawn=0;
+const costs={mine:60,sword:80,archer:100};
+function resize(){const r=canvas.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);W=Math.max(300,r.width);H=Math.max(230,r.height);canvas.width=Math.floor(W*dpr);canvas.height=Math.floor(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}
+new ResizeObserver(resize).observe(canvas);resize();
+function say(t){$('message').textContent=t}
+function sync(){ $('gold').textContent=Math.floor(gold);$('hp').textContent=Math.max(0,baseHP);$('levelNum').textContent=level;
+$('mine').disabled=gold<costs.mine;$('sword').disabled=gold<costs.sword;$('archer').disabled=gold<costs.archer;}
+function newGame(n=level){level=n;gold=180;baseHP=100;enemyHP=100;units=[];enemies=[];arrows=[];particles=[];tick=0;spawnTimer=0;enemySpawn=0;ended=false;started=true;$('menu').style.display='none';$('end').style.display='none';say('Глава '+level+': собирай ресурсы и продвигайся к вражеской башне.');sync()}
+function buy(type){if(!started||ended)return;let cost=costs[type];if(gold<cost){say('Не хватает золота!');return}gold-=cost;
+if(type==='mine')units.push({type:'mine',x:W*.16,y:0,hp:40,cd:0,team:0});
+if(type==='sword')units.push({type:'sword',x:W*.18,y:0,hp:65,cd:0,team:0});
+if(type==='archer')units.push({type:'archer',x:W*.18,y:0,hp:38,cd:0,team:0});
+say(({mine:'Рабочий отправился добывать золото.',sword:'Мечник готов к бою!',archer:'Лучник занял позицию.'})[type]);sync()}
+$('mine').onclick=()=>buy('mine');$('sword').onclick=()=>buy('sword');$('archer').onclick=()=>buy('archer');
+$('special').onclick=()=>{if(!started||ended)return;if(gold<40){say('Для особого удара нужно 40 золота.');return}gold-=40;enemies.forEach(e=>e.hp-=28);particles.push({x:W*.52,y:H*.58,life:35,kind:'blast'});say('⚡ Особый удар! Враги получили урон.');sync()};
+$('start').onclick=()=>newGame(1);$('again').onclick=()=>newGame(level);$('next').onclick=()=>newGame(level>=3?1:level+1);
+function floorY(){return H*.78}
+function drawBackdrop(){let sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,['#80d6ee','#f4d9a1','#a7d9ff'][ (level-1)%3]);sky.addColorStop(1,'#e5edc3');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+ctx.fillStyle='#79b96b';ctx.fillRect(0,floorY(),W,H-floorY());
+ctx.fillStyle='#5b8f52';ctx.fillRect(0,floorY()+16,W,H-floorY()-16);
+for(let i=0;i<7;i++){let x=i*W/6;ctx.fillStyle=level===2?'#7d8b98':'#679b76';ctx.beginPath();ctx.moveTo(x,floorY());ctx.lineTo(x+W*.08,floorY()-H*.14);ctx.lineTo(x+W*.16,floorY());ctx.fill()}
+drawTower(W*.07,floorY(),false,baseHP/100);drawTower(W*.93,floorY(),true,enemyHP/100);
+ctx.fillStyle='#5c4632';ctx.fillRect(0,floorY()+7,W,8)}
+function drawTower(x,y,enemy,hp){ctx.save();ctx.translate(x,y);ctx.fillStyle=enemy?'#7b3544':'#344d78';ctx.fillRect(-W*.035,-H*.25,W*.07,H*.25);ctx.fillStyle=enemy?'#9f4756':'#4d6fa1';ctx.fillRect(-W*.045,-H*.28,W*.09,H*.055);ctx.fillStyle='#f4d35e';ctx.fillRect(-W*.012,-H*.19,W*.024,H*.07);ctx.fillStyle='#1f2937';ctx.fillRect(-W*.045,-H*.31,W*.09,5);ctx.fillStyle=enemy?'#ef4444':'#22c55e';ctx.fillRect(-W*.04,-H*.34,W*.08*Math.max(0,hp),4);ctx.restore()}
+function stick(x,y,color,weapon,scale=1){ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.lineCap='round';ctx.strokeStyle=color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,-22,7,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(0,3);ctx.moveTo(0,-9);ctx.lineTo(-8,-1);ctx.moveTo(0,-9);ctx.lineTo(8,-1);ctx.moveTo(0,3);ctx.lineTo(-7,14);ctx.moveTo(0,3);ctx.lineTo(7,14);ctx.stroke();if(weapon){ctx.strokeStyle=weapon==='bow'?'#8b5e34':'#dce5ee';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(9,-3);ctx.lineTo(weapon==='bow'?12:-2,-20);ctx.lineTo(weapon==='bow'?9:-2,-35);ctx.stroke()}ctx.restore()}
+function spawnEnemy(){let type=level===3&&Math.random()<.25?'brute':(Math.random()<.35?'archer':'sword');enemies.push({type,x:W*.82+Math.random()*W*.05,hp:type==='brute'?70:45,cd:Math.random()*30,team:1})}
+function update(){if(!started||ended)return;tick++;gold+=units.filter(u=>u.type==='mine').length*.035;
+enemySpawn++;if(enemySpawn>Math.max(100,210-level*28)){spawnEnemy();enemySpawn=0}
+for(const u of units){u.y=floorY();u.cd--;if(u.type==='mine'){if(tick%90===0)gold+=8;continue}
+let target=enemies.find(e=>e.hp>0 && e.x>u.x);
+if(u.type==='archer'){if(target&&u.cd<=0){arrows.push({x:u.x+9,y:u.y-25,tx:target.x,ty:target.y-24,team:0,damage:13,target});u.cd=65}}
+else if(target){if(target.x-u.x<25&&u.cd<=0){target.hp-=18;u.cd=40}else u.x+=.35}
+else if(enemyHP>0){u.x+=.24;if(u.x>W*.86){enemyHP-=.08;u.x=W*.84}}
+}
+for(const e of enemies){e.cd--;e.y=floorY();let target=units.filter(u=>u.type!=='mine'&&u.hp>0).sort((a,b)=>Math.abs(a.x-e.x)-Math.abs(b.x-e.x))[0];
+if(target&&Math.abs(e.x-target.x)<24){if(e.cd<=0){target.hp-=e.type==='brute'?12:7;e.cd=48}}else if(e.x>W*.12)e.x-=e.type==='brute'?.18:.3;else {baseHP-=.06}}
+for(const a of arrows){a.x+=(a.tx-a.x)*.13;a.y+=(a.ty-a.y)*.13;if(Math.abs(a.tx-a.x)<5){if(a.target)a.target.hp-=a.damage;a.done=true}}
+arrows=arrows.filter(a=>!a.done);units=units.filter(u=>u.hp>0&&u.x<W*1.1);enemies=enemies.filter(e=>e.hp>0&&e.x>W*.02);
+particles.forEach(p=>p.life--);particles=particles.filter(p=>p.life>0);
+if(enemyHP<=0)finish(true);else if(baseHP<=0)finish(false);sync()}
+function finish(win){ended=true;$('end').style.display='flex';$('endTitle').textContent=win?'Глава пройдена!':'Статуя разрушена';$('endText').textContent=win?(level<3?'Отлично! Следующая глава будет сложнее.':'Ты прошёл все три тестовые главы!'):'Попробуй нанять больше бойцов и использовать особый удар.';$('next').style.display=win?'block':'none';say(win?'Победа!':'Поражение.')}
+function draw(){drawBackdrop();let y=floorY();units.forEach(u=>{if(u.type==='mine'){stick(u.x,y,'#374151',null,.9);ctx.fillStyle='#facc15';ctx.font='12px sans-serif';ctx.fillText('⛏',u.x-5,y-45)}else stick(u.x,y,u.type==='archer'?'#14532d':'#1e3a8a',u.type==='archer'?'bow':'sword',u.type==='sword'?1.1:.9)});
+enemies.forEach(e=>stick(e.x,y,e.type==='brute'?'#7f1d1d':'#991b1b',e.type==='archer'?'bow':'sword',e.type==='brute'?1.35:1));
+arrows.forEach(a=>{ctx.strokeStyle='#4b3621';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(a.x-8,a.y-2);ctx.stroke()});
+particles.forEach(p=>{ctx.fillStyle='#facc15';ctx.globalAlpha=p.life/35;ctx.beginPath();ctx.arc(p.x,p.y,Math.max(3,35-p.life),0,Math.PI*2);ctx.fill();ctx.globalAlpha=1});
+ctx.fillStyle='#172033';ctx.font='bold 12px sans-serif';ctx.fillText('ТВОЯ АРМИЯ',W*.12,18);ctx.fillText('АРМИЯ ПРОТИВНИКА',W*.68,18);
+if(started&&!ended){ctx.fillStyle='#172033';ctx.font='12px sans-serif';ctx.fillText('Вражеская статуя: '+Math.max(0,Math.ceil(enemyHP))+'%',W*.62,35)}}
+function loop(){update();draw();requestAnimationFrame(loop)}loop();
+})();
+</script>
+</body>
+</html>
