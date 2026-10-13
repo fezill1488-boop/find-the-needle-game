@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Stink War Legacy 2</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#081525;color:#fff;font-family:Arial,system-ui,sans-serif;touch-action:manipulation}
+button{font-weight:900;border:2px solid #5b331b;border-radius:10px;color:#291708;background:linear-gradient(#ffe477,#d99b21);box-shadow:0 4px 0 #704218;padding:11px 8px;font-size:clamp(12px,2.7vw,17px)}
+button:active{transform:translateY(2px);box-shadow:0 2px 0 #704218}
+#app{height:100dvh;width:100%;position:relative;overflow:hidden;background:#14395b}
+.screen{position:absolute;inset:0;display:none}.screen.active{display:flex}
+#lobby{align-items:center;justify-content:center;flex-direction:column;background:linear-gradient(#367fe3 0%,#5d81ce 46%,#254c3a 66%,#23611d 100%)}
+.cloud{position:absolute;height:18px;width:140px;background:#ffffffaa;border-radius:50%;filter:blur(1px);top:12%;left:4%;box-shadow:40px 4px 0 -3px #ffffff99,70px -4px 0 -6px #fff9}
+.logo{position:absolute;top:9%;right:4%;width:62%;text-align:center;font-family:Georgia,serif;font-weight:1000;letter-spacing:1px;font-size:clamp(24px,7vw,68px);line-height:.8;text-shadow:3px 4px 0 #111,-2px -2px #111,2px -2px #111;color:#fff}
+.logo span{display:block;font-size:.39em;letter-spacing:.35em;margin-top:12px}
+.hero{position:absolute;left:-2%;bottom:-8%;height:79%;width:51%;font-size:clamp(110px,30vw,310px);display:flex;align-items:flex-end;filter:drop-shadow(5px 7px 0 #111);transform:rotate(-5deg)}
+.lobby-actions{position:absolute;right:5%;top:43%;width:43%;display:flex;flex-direction:column;gap:12px;align-items:stretch}
+.play{font-size:clamp(23px,5vw,43px);padding:13px 5px;background:linear-gradient(#ff8585,#f20b0b);color:#3b0909;border-color:#7b1717;box-shadow:0 5px 0 #6e0c0c;margin-bottom:12px}
+.minirow{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.minirow button{padding:10px 2px}
+.lobby-bottom{position:absolute;bottom:2%;left:2%;display:flex;gap:7px}.chest{font-size:clamp(22px,5vw,38px);background:#5c8db4;border:2px solid #d9e8ee;border-radius:8px;padding:5px}
+#select{background:linear-gradient(#173b5b,#081525);align-items:center;justify-content:center;padding:18px}
+.panel{width:min(560px,100%);background:#142b40ed;border:2px solid #52d9f4;border-radius:18px;padding:18px;text-align:center;box-shadow:0 8px 30px #0008}
+.panel h2{margin:0 0 10px;font-size:clamp(22px,5vw,34px)}.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}.level{min-height:82px;background:linear-gradient(#72d5ee,#2372a6);color:#071c2b;border-color:#b9f1ff}.level small{display:block;margin-top:5px}
+#battle{background:#70b8d2;flex-direction:column}
+#hud{height:58px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:5px 10px;background:linear-gradient(90deg,#805319,#d2a348,#805319);border-bottom:3px solid #503311;gap:5px}
+.resources{font-size:clamp(12px,3vw,17px);font-weight:900;white-space:nowrap}.hudbuttons{display:flex;gap:5px}.hudbuttons button{padding:7px 9px;font-size:18px}
+#field{display:block;width:100%;flex:1;min-height:0}
+#buybar{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:8px;background:#6c471e;border-top:3px solid #d7a84c}
+.buy{min-height:57px;background:linear-gradient(#ffe47b,#c98923);font-size:clamp(11px,2.7vw,15px);padding:6px 2px}.buy span{display:block;font-size:.86em;font-weight:700;margin-top:3px}
+#tip{position:absolute;left:50%;top:20%;transform:translateX(-50%);max-width:70%;padding:12px 16px;background:#383838ed;border:3px solid #50d9f3;border-radius:14px;text-align:center;font-size:clamp(14px,3.7vw,23px);pointer-events:none}
+#tip.hidden{display:none}
+#toast{position:absolute;bottom:78px;left:50%;transform:translateX(-50%);background:#101827dd;border-radius:9px;padding:8px 12px;font-size:13px;display:none;white-space:nowrap}
+#pause{background:#0009;align-items:center;justify-content:center;padding:20px}
+@media(min-width:700px){.hero{font-size:300px}.lobby-actions{max-width:430px}.lobby-bottom{bottom:3%}}
+</style>
+</head>
+<body>
+<audio id="lobbyMusic" src="lobby_music.mp3" loop preload="auto"></audio>
+<div id="app">
+<section id="lobby" class="screen active">
+<div class="cloud"></div><div class="hero">🛡️</div>
+<div class="logo">STICK WAR<span>LEGACY II</span></div>
+<div class="lobby-actions">
+<button class="play" id="playBtn">ИГРАТЬ</button>
+<div class="minirow"><button onclick="notify('Заклинания появятся в будущей версии!')">ЗАКЛИНАНИЯ</button><button onclick="notify('Оболочки появятся в будущей версии!')">ОБОЛОЧКИ</button><button onclick="notify('Сундуки пока декоративные.')">СУНДУКИ</button><button onclick="notify('Магазин пока в разработке.')">МАГАЗИН</button></div>
+</div>
+<div class="lobby-bottom"><button class="chest" onclick="notify('Сундук пока закрыт 🔒')">🧰</button><button class="chest" onclick="notify('Награды добавим позже!')">🏆</button></div>
+</section>
+<section id="select" class="screen"><div class="panel"><h2>ВЫБЕРИ УРОВЕНЬ</h2><p>Выбери поле битвы для своей армии.</p><div class="levels"><button class="level" data-level="1">🌙<br>Глава 1<small>Лунные холмы</small></button><button class="level" data-level="2">🌲<br>Глава 2<small>Зелёная долина</small></button><button class="level" data-level="3">🔥<br>Глава 3<small>Красные скалы</small></button></div><button id="backLobby" style="width:100%;background:#b9d6e6">НАЗАД</button></div></section>
+<section id="battle" class="screen">
+<div id="hud"><div class="resources">🪙 <b id="gold">150</b><br>👥 <b id="pop">0/50</b></div><div class="hudbuttons"><button id="homeBtn" title="В лобби">🏠</button><button id="pauseBtn" title="Пауза">Ⅱ</button></div></div>
+<canvas id="field"></canvas><div id="tip">Обучение: нажми «Рабочий», чтобы добывать руду.</div><div id="toast"></div>
+<div id="buybar"><button class="buy" id="workerBtn">⛏️ РАБОЧИЙ<span>Цена: 150 🪙</span></button><button class="buy" id="apprenticeBtn">🪄 УЧЕНИК<span>Цена: 125 🪙</span></button><button class="buy" id="swordsmanBtn">⚔️ МЕЧНИК<span>Цена: 200 🪙</span></button></div>
+</section>
+<section id="pause" class="screen"><div class="panel"><h2>ПАУЗА</h2><p>Битва приостановлена.</p><button id="resumeBtn" style="width:100%">ПРОДОЛЖИТЬ</button><button id="pauseHome" style="width:100%;margin-top:10px;background:#b9d6e6">В ЛОББИ</button></div></section>
+</div>
+<script>
+const $=id=>document.getElementById(id);let screen='lobby',level=1,gold=150,units=[],enemies=[],frame=0,paused=false,toastTimer=0;
+const canvas=$('field'),ctx=canvas.getContext('2d');let W=800,H=440,dpr=1;
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');screen=id;if(id==='battle'||id==='pause')stopLobbyMusic();else if(id==='lobby'&&musicUnlocked)playLobbyMusic();if(id==='battle')resize()}
+function notify(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.style.display='none',1800)}
+const lobbyMusic=$('lobbyMusic');let musicUnlocked=false;
+function playLobbyMusic(){if(screen!=='lobby')return; lobbyMusic.volume=0.65; const p=lobbyMusic.play(); if(p&&p.catch)p.catch(()=>{});}
+function stopLobbyMusic(){lobbyMusic.pause();}
+document.addEventListener('pointerdown',()=>{if(!musicUnlocked){musicUnlocked=true;if(screen==='lobby')playLobbyMusic();}},{once:true});
+
+$('playBtn').onclick=()=>show('select');$('backLobby').onclick=()=>show('lobby');
+document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>startLevel(+b.dataset.level));
+$('homeBtn').onclick=()=>show('lobby');$('pauseBtn').onclick=()=>show('pause');$('resumeBtn').onclick=()=>show('battle');$('pauseHome').onclick=()=>show('lobby');
+function resize(){let r=canvas.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);W=Math.max(320,r.width);H=Math.max(230,r.height);canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}
+new ResizeObserver(()=>{if(screen==='battle')resize()}).observe(canvas);
+function startLevel(n){level=n;gold=150;units=[];enemies=[];frame=0;paused=false;$('tip').classList.remove('hidden');$('tip').textContent='Обучение: нажми «Рабочий», чтобы добывать руду.';sync();show('battle');resize()}
+function sync(){$('gold').textContent=Math.floor(gold);$('pop').textContent=units.length+'/50';$('workerBtn').disabled=gold<150||units.length>=50;$('apprenticeBtn').disabled=gold<125||units.length>=50;$('swordsmanBtn').disabled=gold<200||units.length>=50}
+function buy(type){if(units.length>=50){notify('Армия заполнена!');return}let cost={worker:150,apprentice:125,swordsman:200}[type];if(gold<cost){notify('Не хватает золота!');return}gold-=cost;units.push({type,x:W*.2+Math.random()*20,hp:100,cd:0});$('tip').classList.add('hidden');notify(type==='worker'?'Рабочий отправился к руде!':type==='apprentice'?'Ученик готов использовать магию!':'Мечник готов к бою!');sync()}
+$('workerBtn').onclick=()=>buy('worker');$('apprenticeBtn').onclick=()=>buy('apprentice');$('swordsmanBtn').onclick=()=>buy('swordsman');
+function ground(){return H*.79}
+function bg(){let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,level===1?'#062b48':level===2?'#6bbbd8':'#d98a52');g.addColorStop(.65,level===1?'#438bb0':level===2?'#a9d7e5':'#f3c17a');g.addColorStop(.66,'#07451e');g.addColorStop(1,'#009b4a');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+if(level===1){ctx.fillStyle='#80d5e8';ctx.beginPath();ctx.arc(W*.32,H*.2,H*.13,0,Math.PI*2);ctx.fill()}
+ctx.fillStyle=level===3?'#6c3d2c':'#063b18';ctx.beginPath();ctx.moveTo(0,ground());for(let x=0;x<=W;x+=W/8)ctx.lineTo(x,ground()-Math.sin(x/W*Math.PI*2)*H*.06);ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.fill();
+for(let i=0;i<5;i++){let x=W*(.37+i*.13);let y=ground()+H*.1+Math.sin(i*3)*H*.035;ore(x,y)}
+tower(W*.07,ground(),false);tower(W*.93,ground(),true)}
+function ore(x,y){ctx.fillStyle='#6b7477';ctx.beginPath();ctx.ellipse(x,y,23,10,0,0,Math.PI*2);ctx.fill();for(let i=0;i<7;i++){ctx.fillStyle=['#ffe875','#ffc928','#fff0a1'][i%3];ctx.beginPath();ctx.moveTo(x-19+i*5,y-3);ctx.lineTo(x-15+i*5,y-23-(i%3)*4);ctx.lineTo(x-10+i*5,y-4);ctx.fill()}}
+function tower(x,y,enemy){ctx.fillStyle=enemy?'#783b35':'#737d87';ctx.fillRect(x-W*.025,y-H*.22,W*.05,H*.22);ctx.fillStyle=enemy?'#bd5643':'#aab2b7';ctx.fillRect(x-W*.034,y-H*.25,W*.068,H*.05);ctx.fillStyle='#2a2b31';ctx.fillRect(x-W*.009,y-H*.17,W*.018,H*.06)}
+function stick(x,y,type,enemy=false){ctx.save();ctx.translate(x,y);ctx.lineCap='round';let c=enemy?'#25252a':type==='worker'?'#8b8d91':type==='apprentice'?'#4c2d83':'#333b4c';ctx.strokeStyle=c;ctx.lineWidth=6;ctx.beginPath();ctx.arc(0,-28,9,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(0,-18);ctx.lineTo(0,5);ctx.moveTo(0,-11);ctx.lineTo(-12,0);ctx.moveTo(0,-11);ctx.lineTo(12,-1);ctx.moveTo(0,5);ctx.lineTo(-10,20);ctx.moveTo(0,5);ctx.lineTo(10,20);ctx.stroke();if(type==='worker'){ctx.strokeStyle='#d4a13a';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(13,-2);ctx.lineTo(18,-31);ctx.stroke()}if(type==='apprentice'){ctx.fillStyle='#f5a623';ctx.beginPath();ctx.moveTo(-10,-32);ctx.lineTo(0,-53);ctx.lineTo(12,-32);ctx.fill()}if(type==='swordsman'){ctx.strokeStyle='#e8e8ed';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(12,-4);ctx.lineTo(25,-28);ctx.stroke()}ctx.restore()}
+function draw(){bg();let y=ground();units.forEach(u=>stick(u.x,y,u.type));enemies.forEach(e=>stick(e.x,y,e.type,true));ctx.fillStyle='#fff';ctx.font='bold 13px Arial';ctx.fillText('ТВОЯ БАЗА',W*.02,20);ctx.fillText('ВРАГ',W*.87,20)}
+function update(){if(screen!=='battle')return;frame++;if(frame%30===0){gold+=units.filter(u=>u.type==='worker').length*2; if(units.length&&Math.random()<.025)enemies.push({x:W*.83,hp:50,type:'swordsman'})}
+units.forEach(u=>{if(u.type==='worker'){u.x=W*.28+Math.sin(frame/35+units.indexOf(u))*W*.025}else if(u.type==='swordsman'){let e=enemies[0];if(e){u.x+=.4;if(Math.abs(u.x-e.x)<25){e.hp-=.3}}else u.x=Math.min(W*.65,u.x+.04)}else{let e=enemies[0];if(e&&Math.random()<.04)e.hp-=1}});
+enemies.forEach(e=>e.x-=.12);enemies=enemies.filter(e=>e.hp>0&&e.x>W*.08);sync()}
+function loop(){if(screen==='battle'){update();draw()}requestAnimationFrame(loop)}loop();sync();
+</script>
+</body>
+</html>
