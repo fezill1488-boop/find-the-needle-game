@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>НомерЗнаток — коллекция номеров</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="logo">№</div>
+    <div class="brand-wrap"><div class="brand">НОМЕР<span>ЗНАТОК</span></div><div class="tagline">Музей автомобильных номеров</div></div>
+    <div class="wallet">🪙 <b id="coins">0</b></div>
+    <button id="soundToggle" class="sound-btn" aria-label="Выключить звук">🔊</button>
+  </header>
+  <nav class="tabs">
+    <button class="tab active" data-view="home">🏁 Играть</button>
+    <button class="tab" data-view="collection">🗂 Коллекция <small id="navOwned">0/12</small></button>
+    <button class="tab" data-view="progress">🏆 Прогресс</button>
+  </nav>
+
+  <main>
+    <section id="homeView" class="view">
+      <div class="hero card">
+        <div class="eyebrow">МИРОВАЯ КОЛЛЕКЦИЯ · СЕЗОН 01</div>
+        <h1>Каждый номер<br><span>рассказывает историю.</span></h1>
+        <p>Угадывай страну, собирай монеты и открывай автомобильные номера для своей коллекции.</p>
+        <div class="hero-stats">
+          <div><small>УРОВЕНЬ</small><b id="homeLevel">1</b></div>
+          <div><small>ОТКРЫТО</small><b id="homeOwned">0/12</b></div>
+          <div><small>РЕКОРД</small><b id="homeBest">0</b></div>
+        </div>
+        <button id="startBtn" class="primary">Начать раунд <span>→</span></button>
+      </div>
+      <div class="section-title"><div><div class="eyebrow">ТВОЙ ГАРАЖ ЗНАНИЙ</div><h2>Недавно открытые</h2></div><button class="link-btn" data-goto="collection">Все →</button></div>
+      <div id="homeCollection" class="mini-collection"></div>
+      <div class="tip"><span>💡</span><div><b>Совет коллекционера</b><p>За правильный ответ ты получаешь 100 очков и монеты. Подсказка поможет узнать код страны.</p></div></div>
+    </section>
+
+    <section id="quizView" class="view hidden">
+      <div class="quiz-nav"><button id="exitQuiz" class="back-btn">← Меню</button><span>ВОПРОС <b id="qNum">1</b>/10</span><span class="score">⭐ <b id="roundScore">0</b></span></div>
+      <div class="progress-track"><span id="quizBar"></span></div>
+      <div class="quiz-heading"><div class="eyebrow">УГАДАЙ СТРАНУ</div><h1>Чей это<br>автомобильный номер?</h1><p>Изучи формат и выбери страну.</p></div>
+      <div class="plate-stage">
+        <div id="plate" class="plate">
+          <div class="plate-band"><span id="plateFlag">🇩🇪</span><b id="plateCode">D</b><small>EU</small></div>
+          <div class="plate-content"><div id="plateText" class="plate-text">B AB 4821</div><div id="plateSub" class="plate-sub">BERLIN · GERMANY</div></div>
+        </div>
+        <div class="plate-caption">✦ КОЛЛЕКЦИОННЫЙ ОБРАЗЕЦ ✦</div>
+      </div>
+      <div id="answers" class="answers"></div>
+      <div id="hintText" class="hint-text">Выбери правильную страну.</div>
+      <div id="feedback" class="feedback" aria-live="polite"></div>
+      <div class="quiz-actions"><button id="hintBtn" class="secondary">💡 Подсказка <b id="hintsLeft">2</b></button><button id="nextBtn" class="primary" disabled>Дальше →</button></div>
+    </section>
+
+    <section id="collectionView" class="view hidden">
+      <div class="page-heading"><div class="eyebrow">ТВОЯ ГОРДОСТЬ</div><h1>Коллекция номеров</h1><p>Открывай новые карточки за монеты, заработанные в викторине.</p></div>
+      <div class="collection-tools"><span id="collectionLabel">0 из 12 открыто</span><select id="collectionFilter"><option value="all">Все номера</option><option value="owned">Открытые</option><option value="locked">Закрытые</option></select></div>
+      <div id="collectionGrid" class="collection-grid"></div>
+    </section>
+
+    <section id="progressView" class="view hidden">
+      <div class="page-heading"><div class="eyebrow">ТВОЙ ПУТЬ</div><h1>Прогресс игрока</h1><p>Каждый правильный ответ приближает тебя к новой находке.</p></div>
+      <div class="level-card card"><div class="level-orb"><small>УРОВЕНЬ</small><b id="levelNum">1</b></div><div class="level-info"><b id="levelName">Начинающий наблюдатель</b><p id="levelDesc">Изучи первые номера мира.</p><div class="xp-track"><span id="xpBar"></span></div><small id="xpText">0 / 300 XP до следующего уровня</small></div></div>
+      <div class="stats-grid">
+        <div class="stat"><span>🎯</span><small>Всего очков</small><b id="totalPoints">0</b></div>
+        <div class="stat"><span>✅</span><small>Верных ответов</small><b id="totalCorrect">0</b></div>
+        <div class="stat"><span>🔥</span><small>Лучшая серия</small><b id="bestStreak">0</b></div>
+        <div class="stat"><span>🗂</span><small>Открыто номеров</small><b id="progressOwned">0/12</b></div>
+      </div>
+      <div class="section-title"><div><div class="eyebrow">МАЛЕНЬКИЕ ПОБЕДЫ</div><h2>Достижения</h2></div></div>
+      <div id="achievements" class="achievements"></div>
+      <button id="resetBtn" class="reset-btn">Сбросить прогресс на этом устройстве</button>
+    </section>
+
+    <section id="resultView" class="view hidden">
+      <div class="result card"><div id="resultEmoji" class="result-emoji">🏆</div><div class="eyebrow">РАУНД ЗАВЕРШЁН</div><h1 id="resultTitle">Отличная работа!</h1><p id="resultDesc">Коллекция становится больше.</p>
+        <div class="result-stats"><div><small>ОЧКИ</small><b id="finalPoints">0</b></div><div><small>ПРАВИЛЬНО</small><b id="finalCorrect">0/10</b></div><div><small>МОНЕТЫ</small><b id="earnedCoins">0</b></div></div>
+        <div id="newUnlocks" class="new-unlocks"></div>
+        <button id="playAgain" class="primary">Ещё раунд <span>↻</span></button><button class="secondary full" data-goto="collection">Моя коллекция</button>
+      </div>
+    </section>
+  </main>
+  <footer>НОМЕРЗНАТОК <span>•</span> ИГРАЙ · УЗНАВАЙ · СОБИРАЙ</footer>
+</div>
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card"><button id="closeModal" class="close-modal">✕</button><div id="modalBody"></div></div></div>
+<script src="game.js"></script>
+</body>
+</html>
